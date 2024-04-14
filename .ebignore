@@ -1,0 +1,9 @@
+# .ebignore
+
+.elasticbeanstalk/
+lambda_function.py
+.gitignore
+sql/
+cloud-sa2024-lambda-layer.zip
+cloud-sa2024-arch.PNG
+README.md

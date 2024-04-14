@@ -1,0 +1,191 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+	<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+	<link href="https://fonts.googleapis.com/css2?family=Roboto:ital,wght@0,100;0,300;0,400;0,500;0,700;1,100;1,300;1,400;1,500;1,700&display=swap" rel="stylesheet">
+    <title>File Storage App</title>
+    <style>
+        body {
+			font-family: 'Roboto', sans-serif;
+			font-size: 0.8em;
+			background-color: #f8f8f8;
+            color: #333;
+            margin: 0;
+            padding: 0;
+            text-align: center;
+        }
+
+        h1 {
+            color: #0070c9;
+            margin-top: 40px;
+            font-size: xx-large;
+        }
+
+        .form-container {
+        	font-family: 'Roboto', sans-serif;
+            width: 300px;
+            margin: 20px auto;
+            background-color: #fff;
+            padding: 20px;
+            border-radius: 10px;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+        }
+
+        input {
+            width: calc(100% - 20px);
+            padding: 10px;
+            margin-bottom: 15px;
+            border: 1px solid #ccc;
+            border-radius: 5px;
+            box-sizing: border-box;
+            transition: border-color 0.3s ease-in-out;
+        }
+
+        input[type="submit"] {
+            background-color: #0070c9;
+            color: #fff;
+            cursor: pointer;
+            transition: background-color 0.3s ease-in-out;
+        }
+
+        input[type="submit"]:hover {
+            background-color: #00578b;
+        }
+
+        .top-buttons {
+            display: flex;
+            justify-content: space-between;
+            margin: auto;
+            margin-top: 20px;
+            width: 340px;
+            padding: 0;
+        }
+
+        .top-buttons button {
+            width: calc(50% - 10px);
+            padding: 10px;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            transition: background-color 0.3s ease-in-out, color 0.3s ease-in-out;
+        }
+
+        .top-buttons #login-btn {
+            background-color: #0070c9;
+            color: #fff;
+        }
+
+        .top-buttons #signup-btn {
+            background-color: #fff;
+            color: #0070c9;
+        }
+
+        .flash-messages {
+            position: fixed;
+            top: 10%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            background-color: #0070c9;
+            color: #fff;
+            padding: 20px;
+            padding-top: 40px;
+            border-radius: 10px;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.5);
+            display: none;
+        }
+
+        .flash-messages p {
+            margin: 0;
+            color: white;
+        }
+
+        .close-btn {
+            position: absolute;
+            top: 10px;
+            right: 10px;
+            background: none;
+            border: none;
+            cursor: pointer;
+            font-size: 16px;
+            color: #fff;
+        }
+    </style>
+</head>
+<body>
+    {% with messages = get_flashed_messages() %}
+        {% if messages %}
+            <div class="flash-messages" id="flash-messages">
+                <button class="close-btn" onclick="closeFlashMessages()">X</button>
+                {% for message in messages %}
+                    <p>{{ message }}</p>
+                {% endfor %}
+            </div>
+        {% endif %}
+    {% endwith %}
+    <h1><b>Cloud Storage App</b></h1>
+    <div class="top-buttons">
+        <button id="login-btn" onclick="toggleForm('login-form')">Login</button>
+        <button id="signup-btn" onclick="toggleForm('signup-form')">Signup</button>
+    </div>
+    <div id="login-form" class="form-container">
+        <h2>Login</h2>
+        <form action="/login" method="post">
+            <input id="signin_email" type="email" name="signin_email" placeholder="Email" required><br>
+            <input id="signin_pass" type="password" name="signin_pass" placeholder="Enter Password" required><br>
+            <input id="signin_submit" type="submit" name="signin_submit">
+        </form>
+    </div>
+    <div id="signup-form" class="form-container" style="display: none;">
+        <h2>Signup</h2>
+        <form action="/signup" name="f_signup" method="post">
+            <input type="text" name="f_signup_name" placeholder="Full Name" required><br>
+            <input type="email" name="f_signup_email" placeholder="Email" required><br>
+            <input type="password" name="f_signup_pass" placeholder="Enter Password" required><br>
+            <input type="password" name="f_signup_conf_pass" placeholder="Confirm Password" required><br>
+            <input type="submit" name="f_signup_submit">
+        </form>
+    </div>
+    
+    <script>
+        function toggleForm(formId) {
+            var loginForm = document.getElementById('login-form');
+            var signupForm = document.getElementById('signup-form');
+            var loginBtn = document.getElementById('login-btn');
+            var signupBtn = document.getElementById('signup-btn');
+
+            if (formId === 'login-form') {
+                loginForm.style.display = 'block';
+                signupForm.style.display = 'none';
+                loginBtn.style.backgroundColor = '#0070c9';
+                loginBtn.style.color = '#fff';
+                signupBtn.style.backgroundColor = '#fff';
+                signupBtn.style.color = '#0070c9';
+            } else if (formId === 'signup-form') {
+                loginForm.style.display = 'none';
+                signupForm.style.display = 'block';
+                loginBtn.style.backgroundColor = '#fff';
+                loginBtn.style.color = '#0070c9';
+                signupBtn.style.backgroundColor = '#0070c9';
+                signupBtn.style.color = '#fff';
+            }
+        }
+
+        function closeFlashMessages() {
+            var flashMessages = document.getElementById('flash-messages');
+            flashMessages.style.display = 'none';
+        }
+
+        // Show flash messages
+        var flashMessages = document.getElementById('flash-messages');
+        if (flashMessages.innerHTML.trim() !== '') {
+            flashMessages.style.display = 'block';
+            setTimeout(function() {
+                flashMessages.style.display = 'none';
+            }, 5000); // Hide after 5 seconds
+        }
+    </script>
+</body>
+</html>

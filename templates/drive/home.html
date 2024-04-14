@@ -1,0 +1,253 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Home - Cloud Storage App</title>
+    <style>
+        body {
+            font-family: 'Arial', sans-serif;
+            font-size: 0.8em;
+            background-color: #f8f8f8;
+            color: #333;
+            margin: 0;
+            padding: 0;
+            padding-left: 25px;
+            text-align: left; /* Align all text to the left */
+        }
+
+        h2, h3 {
+            color: #0070c9;
+            margin-top: 20px;
+        }
+
+        table {
+            border-collapse: collapse;
+            width: 100%;
+            border: 1px solid #ddd;
+            margin-bottom: 20px;
+        }
+
+        th, td {
+            border: 1px solid #ddd;
+            padding: 12px;
+            text-align: left;
+        }
+
+        th {
+            background-color: #0070c9;
+            color: #fff;
+        }
+
+        #files {
+            max-width: 780px;
+            margin: 0 auto;
+        }
+
+        #uploadform {
+            width: 100%; /* Set the width to 100% to make it left-aligned */
+            max-width: 400px;
+            margin: 20px;
+            background-color: #fff;
+            padding: 20px;
+            border-radius: 10px;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+        }
+
+        input[type="file"] {
+            width: 100%;
+            padding: 10px;
+            margin-bottom: 15px;
+            border: 1px solid #ccc;
+            border-radius: 5px;
+            box-sizing: border-box;
+            transition: border-color 0.3s ease-in-out;
+        }
+
+        input[type="submit"] {
+            background-color: #0070c9;
+            color: #fff;
+            cursor: pointer;
+            padding: 12px;
+            border: none;
+            border-radius: 5px;
+            transition: background-color 0.3s ease-in-out;
+        }
+
+        input[type="submit"]:hover {
+            background-color: #00578b;
+        }
+
+        .aws-link {
+            margin-top: 20px;
+            color: #0070c9;
+        }
+
+        form {
+            margin-top: 20px;
+            position: relative; /* Set position to relative for absolute positioning of logout button */
+        }
+
+        form input[type="submit"] {
+            background-color: #fff;
+            color: #0070c9;
+            border: 1px solid #0070c9;
+            cursor: pointer;
+            padding: 10px 20px;
+            border-radius: 5px;
+            transition: background-color 0.3s ease-in-out, color 0.3s ease-in-out;
+            position: absolute; /* Position absolute for top-right corner */
+            top: 0;
+            right: 0;
+            margin-top: 20px;
+            margin-right: 20px;
+        }
+
+        form input[type="submit"]:hover {
+            background-color: #0070c9;
+            color: #fff;
+        }
+
+        .flash-messages {
+            position: fixed;
+            top: 10%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            background-color: #0070c9;
+            color: #fff;
+            padding: 20px;
+            padding-top: 40px;
+            border-radius: 10px;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.5);
+            display: none;
+        }
+
+        .flash-messages p {
+            margin: 0;
+            color: white;
+        }
+
+        .close-btn {
+            position: absolute;
+            top: 10px;
+            right: 10px;
+            background: none;
+            border: none;
+            cursor: pointer;
+            font-size: 16px;
+            color: #fff;
+        }
+
+        .logout-btn{
+        	position: fixed;
+        	top: 0px;
+        	right: 20px;
+        }
+    </style>
+</head>
+<body>
+
+    {% with messages = get_flashed_messages() %}
+    {% if messages %}
+    <div class="flash-messages" id="flash-messages">
+        <button class="close-btn" onclick="closeFlashMessages()">X</button>
+        {% for message in messages %}
+        <p>{{ message }}</p>
+        {% endfor %}
+    </div>
+    {% endif %}
+    {% endwith %}
+
+    {% for user in user_details %}
+    <h2>Welcome {{ user[2] }}</h2>
+    {% endfor %}
+
+    <h3>Files</h3>
+    <div id="files" style="margin-left: 0px;">
+        {% if total_files != 0 %}
+        <table>
+            <thead>
+                <tr>
+                    <th>Filename</th>
+                    <th>Type</th>
+                    <th>Size</th>
+                    <th>Uploaded on</th>
+                    <th>Actions</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for file in uploaded_files %}
+                <tr>
+                    <td>{{ file['f_name'] }}</td>
+                    <td>{{ file['f_type'] }}</td>
+                    <td>{{ file['f_size_mb'] }}&nbsp;MB</td>
+                    <td>{{ file['f_uploaded_on'] }}</td>
+                    <td>
+                        <a href="{{ file['presigned_url'] }}" target="_blank">View</a>&nbsp;
+                        <a href="#" onclick="deleteFile('{{ file['presigned_url'] }}', '{{ file['f_id'] }}', '{{ file['f_name'] }}')">Delete</a>
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+        {% else %}
+        <p>Empty in here!</p>
+        {% endif %}
+    </div>
+
+    <h2>Upload New File</h2>
+    <form action="/uploadtos3" id="uploadform" method="post" enctype="multipart/form-data">
+        <input type="file" name="file" id="fileInput" required onchange="getFileDetails()">
+        <input type="hidden" name="filename" id="filename">
+        <input type="hidden" name="filesize" id="filesize">
+        <input type="hidden" name="fileextension" id="fileextension">
+        <input type="submit" name="Upload">
+    </form>
+
+    <script>
+    function getFileDetails() {
+        const fileInput = document.getElementById('fileInput');
+        const filenameInput = document.getElementById('filename');
+        const filesizeInput = document.getElementById('filesize');
+        const fileextensionInput = document.getElementById('fileextension');
+
+        const selectedFile = fileInput.files[0];
+
+        if (selectedFile) {
+            // Set values for hidden inputs
+            filenameInput.value = selectedFile.name;
+            filesizeInput.value = selectedFile.size;
+            fileextensionInput.value = selectedFile.name.split('.').pop();
+        }
+    }
+    </script>
+
+    <script>
+    function deleteFile(filePresignedUrl, fileId, fileName) {
+        if (confirm(`Are you sure you want to delete ${fileName}?`)) {
+            // Use an AJAX request or a form to submit the delete request
+            const form = document.createElement('form');
+            form.method = 'post';
+            form.action = '/delete_file';
+
+            const input = document.createElement('input');
+            input.type = 'hidden';
+            input.name = 'file_key';
+            input.value = new URL(filePresignedUrl).pathname.substr(1); // Extract the file key from the URL
+
+            form.appendChild(input);
+            document.body.appendChild(form);
+
+            form.submit();
+        }
+    }
+    </script>
+
+    <div class="aws-link">View the AWS architecture for the storage app <a href="#">here</a></div>
+
+    <form action="/logout" method="post" class="logout-btn">
+        <input type="submit" value="Logout">
+    </form>
+
+</body>
+</html>
